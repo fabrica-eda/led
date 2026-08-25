@@ -1,0 +1,24 @@
+[workspace]
+members = ["blinky/verify"]
+default-members = ["blinky/verify"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.98"
+
+[workspace.dependencies]
+celox = { git = "https://github.com/celox-sim/celox.git", rev = "330eb5797fbe53537125f5cfdbcde5d9cc723a6e" }
+serde_json = "1"
+struo-celox = { git = "https://github.com/fabrica-eda/struo.git", rev = "6e7037c93b501de7b4555a6688f87c2615e0ac1f" }
+struo-frontend-veryl = { git = "https://github.com/fabrica-eda/struo.git", rev = "6e7037c93b501de7b4555a6688f87c2615e0ac1f" }
+struo-synth = { git = "https://github.com/fabrica-eda/struo.git", rev = "6e7037c93b501de7b4555a6688f87c2615e0ac1f" }
+struo-target-ecp5 = { git = "https://github.com/fabrica-eda/struo.git", rev = "6e7037c93b501de7b4555a6688f87c2615e0ac1f" }
+texo-cli = { git = "https://github.com/fabrica-eda/texo.git", rev = "9a04a210c004b7d6396fd657ea3a25199b95622b" }
+texo-flow = { git = "https://github.com/fabrica-eda/texo.git", rev = "9a04a210c004b7d6396fd657ea3a25199b95622b" }
+texo-struo = { git = "https://github.com/fabrica-eda/texo.git", rev = "9a04a210c004b7d6396fd657ea3a25199b95622b" }
+texo-target-ecp5 = { git = "https://github.com/fabrica-eda/texo.git", rev = "9a04a210c004b7d6396fd657ea3a25199b95622b" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
