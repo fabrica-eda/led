@@ -63,3 +63,7 @@ sudo apt install openfpgaloader
 The script uses openFPGALoader's `ecp5_evn` target for the board's FT2232H JTAG
 interface. It loads SRAM only; power cycling restores the board's previous
 configuration.
+
+This path is hardware-verified on the ECP5 5G evaluation board: JTAG detection
+reported ID `0x81113043`, and the generated `Top.bit` completed SRAM erase,
+configuration loading, and finalization with openFPGALoader.
