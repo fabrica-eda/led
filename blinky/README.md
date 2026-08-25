@@ -21,9 +21,8 @@ The generated artifacts under `build/` are produced from `src/Top.veryl`:
    cycles.
 3. Texo placed 69 physical cells, routed 84 nets through 542 PIPs, and met the
    12 MHz setup and hold constraints.
-4. nextpnr packaged the same Struo mapped netlist for Project Trellis and
-   reported 513.87 MHz maximum clock frequency against the 12 MHz constraint.
-5. ecppack produced `build/Top.bit` and `build/Top.svf`.
+4. Texo's native ECP5 bitstream flow generated the Project Trellis
+   configuration and verified an `ecppack`/`ecpunpack` round trip.
 
 The Rust verification and native PnR flow is one Cargo workspace with pinned Git
 dependencies, so separate Struo, Texo, and Celox checkouts are not needed:
@@ -32,9 +31,9 @@ dependencies, so separate Struo, Texo, and Celox checkouts are not needed:
 ./build.sh
 ```
 
-`build.sh` runs the pinned Cargo verifier and produces `build/Top.bit` using
-nextpnr and Project Trellis. To run only simulation, Struo synthesis, and Texo
-place-and-route:
+`build.sh` runs the pinned Cargo verifier and produces `build/Top.bit` directly
+from the Texo checkpoint using Project Trellis. No external P&R tool is required.
+To run only simulation, Struo synthesis, and Texo place-and-route:
 
 ```sh
 ./prepare-architecture.sh

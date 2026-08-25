@@ -16,7 +16,7 @@ Install Rust with rustup, then install the native prerequisites:
 
 ```sh
 sudo apt update
-sudo apt install build-essential clang fpga-trellis fpga-trellis-database nextpnr-ecp5
+sudo apt install build-essential clang fpga-trellis fpga-trellis-database
 ```
 
 Run the complete flow:
@@ -27,8 +27,8 @@ Run the complete flow:
 
 This generates the ECP5 architecture snapshot, runs RTL simulation, Struo
 synthesis and mapping, Celox post-map simulation, Texo place-and-route,
-nextpnr packaging, and `ecppack`. The SRAM bitstream is written to
-`blinky/build/Top.bit`.
+native ECP5 configuration generation, and an `ecppack`/`ecpunpack` round-trip
+check. The SRAM bitstream is written to `blinky/build/Top.bit`.
 
 Generated files stay under `blinky/build/` and are not committed. Programming
 through Windows Lattice Diamond or WSL2 `openFPGALoader` is documented in

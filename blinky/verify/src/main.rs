@@ -109,15 +109,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         mapped.cells().len()
     );
 
-    fs::write(
-        project.join("build/Top.struo.json"),
-        mapped.to_nextpnr_json()?,
-    )?;
     let architecture_path = project.join("build/LFE5UM5G-85F.json");
     let architecture = read_architecture(BufReader::new(File::open(&architecture_path)?))?;
     let constraints = parse_lpf(File::open(project.join("lfe5um5g-85f-evn.lpf"))?)?;
     let imported = import_ecp5(&mapped)?;
     let mut evidence = Evidence::new();
+    evidence.record(Gate::RtlSimulation);
     evidence.record(Gate::SynthesisEquivalence);
     evidence.record(Gate::PostMapSimulation);
     let implemented = implement_struo_ecp5(

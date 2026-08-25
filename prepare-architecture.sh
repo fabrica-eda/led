@@ -4,12 +4,9 @@ set -euo pipefail
 workspace_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 output="${workspace_dir}/blinky/build/LFE5UM5G-85F.json"
 database="/usr/share/trellis/database"
-texo_revision="9a04a21"
-
-if [[ -f "${output}" && "${1:-}" != "--force" ]]; then
-    echo "ECP5 architecture already exists: ${output}"
-    exit 0
-fi
+pytrellis_root="${workspace_dir}/blinky/.build/python3-pytrellis"
+pytrellis_libdir="${pytrellis_root}/usr/lib/x86_64-linux-gnu/trellis"
+texo_revision="e153f96"
 
 for command in cargo apt dpkg-deb find python3; do
     if ! command -v "${command}" >/dev/null; then
@@ -33,21 +30,28 @@ fi
 
 temporary_dir="$(mktemp -d)"
 trap 'rm -rf -- "${temporary_dir}"' EXIT
-(
-    cd "${temporary_dir}"
-    apt download python3-pytrellis
-    dpkg-deb -x python3-pytrellis_*.deb root
-)
+if [[ ! -f "${pytrellis_libdir}/pytrellis.so" ]]; then
+    (
+        cd "${temporary_dir}"
+        apt download python3-pytrellis
+        dpkg-deb -x python3-pytrellis_*.deb "${pytrellis_root}"
+    )
+fi
 
-trellis_root="${temporary_dir}/root"
+if [[ -f "${output}" && "${1:-}" != "--force" ]] && \
+    python3 -c 'import json,sys; sys.exit(json.load(open(sys.argv[1]))["schema_version"] != 6)' "${output}"; then
+    echo "ECP5 architecture already exists: ${output}"
+    exit 0
+fi
+
 python3 "${exporter}" \
     --database "${database}" \
     --device LFE5UM5G-85F \
     --output "${output}" \
-    --project-trellis-revision ubuntu-1.4-2build4 \
-    --database-revision ubuntu-1.4-2build4 \
-    -L "${trellis_root}/usr/lib/x86_64-linux-gnu/trellis" \
-    -L "${trellis_root}/usr/share/trellis/timing/util" \
-    -L "${trellis_root}/usr/share/trellis/util/common"
+    --project-trellis-revision project-trellis/1.4+ubuntu/1.4-2build4 \
+    --database-revision fpga-trellis-database/1.4-2build4 \
+    -L "${pytrellis_libdir}" \
+    -L "${pytrellis_root}/usr/share/trellis/timing/util" \
+    -L "${pytrellis_root}/usr/share/trellis/util/common"
 
 echo "Generated ${output}"
