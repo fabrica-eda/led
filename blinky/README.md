@@ -40,24 +40,7 @@ To run only simulation, Struo synthesis, and Texo place-and-route:
 cargo run --locked --release -p verify-blinky
 ```
 
-## Program SRAM with Windows Diamond Programmer
-
-The board can remain attached to Windows. With Lattice Diamond installed, run
-this from WSL2:
-
-```sh
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(wslpath -w ./blinky/program-diamond.ps1)"
-```
-
-`Top.diamond.xcf` fixes the expected JTAG device to `LFE5UM5G-85F` with ID
-`0x81113043`; Diamond aborts before programming if the detected device differs.
-The command log is written to `build/diamond-program.log`.
-
-If a repeat run reports ID `0x7FFFFFFF`, press board button SW3 (PROGRAMN) or
-power-cycle the board, then run the command again. SW3 clears the active SRAM
-configuration without requiring a power cycle.
-
-## Alternative: program directly from WSL2
+## Program SRAM from WSL2
 
 The FTDI USB device must first be attached to WSL2. From an elevated Windows
 terminal, install/configure usbipd-win if needed, then bind and attach the
@@ -77,5 +60,6 @@ sudo apt install openfpgaloader
 ./blinky/program.sh
 ```
 
-Both methods load SRAM only; power cycling restores the board's previous
+The script uses openFPGALoader's `ecp5_evn` target for the board's FT2232H JTAG
+interface. It loads SRAM only; power cycling restores the board's previous
 configuration.

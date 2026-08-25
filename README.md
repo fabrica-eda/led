@@ -31,5 +31,5 @@ native ECP5 configuration generation, and an `ecppack`/`ecpunpack` round-trip
 check. The SRAM bitstream is written to `blinky/build/Top.bit`.
 
 Generated files stay under `blinky/build/` and are not committed. Programming
-through Windows Lattice Diamond or WSL2 `openFPGALoader` is documented in
+from WSL2 with `openFPGALoader` is documented in
 [blinky/README.md](blinky/README.md).
