@@ -2,7 +2,7 @@
 param(
     [string]$DiamondRoot = "",
     [ValidateRange(1, 5)]
-    [int]$Attempts = 3
+    [int]$Attempts = 1
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,7 +58,7 @@ try {
             -processtype sequential `
             -cabletype usb2 `
             -portaddress FTUSB-0 `
-            -TCK 10
+            -TCK 1
 
         if ($LASTEXITCODE -eq 0) {
             Write-Host "SRAM programming completed successfully."
