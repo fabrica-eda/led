@@ -21,23 +21,30 @@ The generated artifacts under `build/` are produced from `src/Top.veryl`:
    cycles.
 3. Texo placed 69 physical cells, routed 84 nets through 542 PIPs, and met the
    12 MHz setup and hold constraints.
-4. Texo's native ECP5 bitstream flow generated the Project Trellis
-   configuration and verified an `ecppack`/`ecpunpack` round trip.
+4. Texo 0.1.2's native ECP5 bitstream flow generated the configuration and
+   SRAM bitstream.
 
-The Rust verification and native PnR flow is one Cargo workspace with pinned Git
-dependencies, so separate Struo, Texo, and Celox checkouts are not needed:
+The Rust workspace uses pinned Struo and Celox Git dependencies for simulation,
+synthesis, mapping, and post-map verification. Texo is installed as a released
+CLI with `fabricaup`; no Struo, Texo, or Celox source checkout is needed:
 
 ```sh
 ./build.sh
 ```
 
-`build.sh` runs the pinned Cargo verifier and produces `build/Top.bit` directly
-from the Texo checkpoint using Project Trellis. No external P&R tool is required.
-To run only simulation, Struo synthesis, and Texo place-and-route:
+`build.sh` fetches the verified ECP5 target pack, runs the Cargo verifier, then
+uses Texo 0.1.2 for place-and-route and native bitstream generation. No external
+P&R tool is required. To run only simulation, Struo synthesis, mapping, and
+post-map verification:
+
+```sh
+cargo run --locked --release -p verify-blinky
+```
+
+To fetch or refresh the target pack separately:
 
 ```sh
 ./prepare-architecture.sh
-cargo run --locked --release -p verify-blinky
 ```
 
 ## Program SRAM from WSL2

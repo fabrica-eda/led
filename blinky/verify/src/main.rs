@@ -1,16 +1,12 @@
 use std::error::Error;
-use std::fs::{self, File};
-use std::io::{BufReader, BufWriter, Write};
+use std::fs;
 use std::path::Path;
 
 use celox::{Simulator, SimulatorBuilder};
 use struo_celox::ecp5_simulator;
+use struo_frontend_veryl::analyze_and_lower;
 use struo_synth::synthesize;
 use struo_target_ecp5::{MappingOptions, map_to_ecp5_with_options};
-use texo_cli::{ecp5_checkpoint, load_veryl_project};
-use texo_flow::{Ecp5FlowOptions, Evidence, Gate, implement_struo_ecp5};
-use texo_struo::import_ecp5;
-use texo_target_ecp5::{parse_lpf, read_architecture};
 
 const SAMPLE_CYCLES: [usize; 5] = [0, 65_535, 65_536, 131_072, 196_608];
 
@@ -60,8 +56,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut rtl = SimulatorBuilder::new(&source, "Top").build_native()?;
     verify_simulator(&mut rtl, "Celox RTL simulation")?;
 
-    let loaded = load_veryl_project(project, Some("Top"))?;
-    let synthesized = synthesize(&loaded.design)?;
+    let design = analyze_and_lower(&source, "ecp5_evn_blinky", "Top")?;
+    let synthesized = synthesize(&design)?;
     let mapped = map_to_ecp5_with_options(
         &synthesized.netlist,
         MappingOptions {
@@ -107,46 +103,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         synthesized.netlist.nodes().len(),
         synthesized.netlist.registers().len(),
         mapped.cells().len()
-    );
-
-    let architecture_path = project.join("build/LFE5UM5G-85F.json");
-    let architecture = read_architecture(BufReader::new(File::open(&architecture_path)?))?;
-    let constraints = parse_lpf(File::open(project.join("lfe5um5g-85f-evn.lpf"))?)?;
-    let imported = import_ecp5(&mapped)?;
-    let mut evidence = Evidence::new();
-    evidence.record(Gate::RtlSimulation);
-    evidence.record(Gate::SynthesisEquivalence);
-    evidence.record(Gate::PostMapSimulation);
-    let implemented = implement_struo_ecp5(
-        &imported,
-        &architecture,
-        Ecp5FlowOptions {
-            speed_grade: Some("8"),
-            package: Some("CABGA381"),
-            lpf: Some(&constraints),
-            ..Ecp5FlowOptions::default()
-        },
-        &mut evidence,
-    )?;
-    if !implemented.timing.met_timing() {
-        return Err("Texo implementation did not meet timing".into());
-    }
-
-    let checkpoint = ecp5_checkpoint("Top", &implemented, &architecture, "CABGA381", &evidence);
-    let mut checkpoint_file = BufWriter::new(File::create(
-        project.join("build/Top.texo.checkpoint.json"),
-    )?);
-    serde_json::to_writer_pretty(&mut checkpoint_file, &checkpoint)?;
-    checkpoint_file.write_all(b"\n")?;
-    checkpoint_file.flush()?;
-
-    println!(
-        "Texo PnR: {} cells, {} nets, {} PIPs; WNS {} ps, WHS {} ps; timing passed",
-        implemented.design.cells().len(),
-        implemented.implementation.routes.len(),
-        implemented.implementation.total_pips,
-        implemented.timing.worst_slack_ps.unwrap_or_default(),
-        implemented.timing.worst_hold_slack_ps.unwrap_or_default(),
     );
 
     Ok(())

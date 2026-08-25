@@ -12,11 +12,21 @@ drive the LEDs, producing the visible binary-count pattern.
 
 ## Build on Ubuntu 24.04 / WSL2
 
-Install Rust with rustup, then install the native prerequisites:
+Install Rust with rustup and the native build prerequisites:
 
 ```sh
 sudo apt update
-sudo apt install build-essential clang fpga-trellis fpga-trellis-database
+sudo apt install build-essential clang
+```
+
+Install Texo 0.1.2 with the released `fabricaup` installer:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf \
+  https://raw.githubusercontent.com/fabrica-eda/fabricaup/main/install.sh | \
+  FABRICAUP_INIT_SKIP=1 sh
+export PATH="$HOME/.fabrica/bin:$PATH"
+fabricaup install v0.1.2
 ```
 
 Run the complete flow:
@@ -25,10 +35,10 @@ Run the complete flow:
 ./build.sh
 ```
 
-This generates the ECP5 architecture snapshot, runs RTL simulation, Struo
-synthesis and mapping, Celox post-map simulation, Texo place-and-route,
-native ECP5 configuration generation, and an `ecppack`/`ecpunpack` round-trip
-check. The SRAM bitstream is written to `blinky/build/Top.bit`.
+This fetches Texo's verified ECP5 target pack, runs RTL simulation, Struo
+synthesis and mapping, Celox post-map simulation, then uses Texo 0.1.2 for
+place-and-route and native ECP5 bitstream generation. The SRAM bitstream is
+written to `blinky/build/Top.bit`.
 
 Generated files stay under `blinky/build/` and are not committed. Programming
 from WSL2 with `openFPGALoader` is documented in

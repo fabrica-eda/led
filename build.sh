@@ -3,29 +3,48 @@ set -euo pipefail
 
 workspace_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${workspace_dir}/blinky/build"
-pytrellis_dir="${workspace_dir}/blinky/.build/python3-pytrellis/usr/lib/x86_64-linux-gnu/trellis"
-texo_revision="e153f96"
 
-for tool in cargo find python3 ecppack ecpunpack; do
-    if ! command -v "${tool}" >/dev/null; then
-        echo "error: required command is missing: ${tool}" >&2
-        exit 1
+find_texo() {
+    if [[ -n "${TEXO:-}" ]]; then
+        printf '%s\n' "${TEXO}"
+    elif command -v texo >/dev/null 2>&1; then
+        command -v texo
+    elif [[ -x "${HOME}/.fabrica/bin/texo" ]]; then
+        printf '%s\n' "${HOME}/.fabrica/bin/texo"
+    else
+        return 1
     fi
-done
+}
 
-"${workspace_dir}/prepare-architecture.sh"
-cargo run --locked --release --manifest-path "${workspace_dir}/Cargo.toml" -p verify-blinky
-
-cargo_home="${CARGO_HOME:-${HOME}/.cargo}"
-bitgen="$(find "${cargo_home}/git/checkouts" -path "*/${texo_revision}/tools/ecp5_bitstream.py" -print -quit)"
-if [[ -z "${bitgen}" ]]; then
-    echo "error: Texo ECP5 bitstream generator was not found in the Cargo Git cache" >&2
+if ! command -v cargo >/dev/null 2>&1; then
+    echo "error: required command is missing: cargo" >&2
     exit 1
 fi
 
-python3 "${bitgen}" \
-    --checkpoint "${build_dir}/Top.texo.checkpoint.json" \
+texo="$(find_texo || true)"
+if [[ -z "${texo}" || ! -x "${texo}" ]]; then
+    echo "error: Texo CLI is missing; install v0.1.2 with fabricaup" >&2
+    exit 1
+fi
+if [[ "$("${texo}" --version)" != "texo 0.1.2" ]]; then
+    echo "error: this template requires Texo CLI v0.1.2" >&2
+    exit 1
+fi
+
+mkdir -p "${build_dir}"
+export TEXO="${texo}"
+"${workspace_dir}/prepare-architecture.sh"
+cargo run --locked --release --manifest-path "${workspace_dir}/Cargo.toml" -p verify-blinky
+
+"${texo}" pnr "${workspace_dir}/blinky" \
+    --top Top \
+    --device LFE5UM5G-85F \
+    --package CABGA381 \
+    --speed 8 \
+    --lpf "${workspace_dir}/blinky/lfe5um5g-85f-evn.lpf" \
+    --output "${build_dir}/Top.texo.checkpoint.json" \
+    --synthesis-goal-mhz 12
+
+"${texo}" bitgen "${build_dir}/Top.texo.checkpoint.json" \
     --config "${build_dir}/Top.config" \
-    --bit "${build_dir}/Top.bit" \
-    --database /usr/share/trellis/database \
-    --pytrellis-libdir "${pytrellis_dir}"
+    --bit "${build_dir}/Top.bit"
