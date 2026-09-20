@@ -1,2 +1,7 @@
 /target/
 /tools/
+
+# Local Nix/direnv environment
+/.direnv/
+/result
+/result-*/
